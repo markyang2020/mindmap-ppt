@@ -22,19 +22,19 @@
             <h1 id="deckTitle">root</h1>
           </div>
 
-          <div class="controls glass-panel" aria-label="节点演示操作区">
+          <div class="controls glass-panel collapsed" aria-label="节点演示操作区">
             <button
               class="controls-toggle"
               id="controlsToggle"
               type="button"
-              aria-expanded="true"
+              aria-expanded="false"
               aria-controls="controlsBody"
-              aria-label="收起控制面板"
-              title="收起控制面板"
+              aria-label="展开控制面板"
+              title="展开控制面板"
             >
-              <span aria-hidden="true">−</span>
+              <span aria-hidden="true">+</span>
             </button>
-            <div class="control-main" id="controlsBody">
+            <div class="control-main" id="controlsBody" inert aria-hidden="true">
               <label class="node-scrubber" for="nodeSlider">
                 <input id="nodeSlider" type="range" min="0" max="0" value="0" aria-label="快速定位节点" />
                 <span class="counter" id="counter">1 / 1</span>
