@@ -58,6 +58,9 @@ let wheelNavigationTimer = null;
 let swipeStart = null;
 let viewportOffset = { x: 0, y: 0 };
 let pointerPan = null;
+let currentViewport = null;
+let currentModel = null;
+let panFrame = null;
 
 assignTreeMetadata(root);
 preorder = collectPreorder(root);
@@ -180,13 +183,12 @@ function handlePointerMove(event) {
 
   event.preventDefault();
   pointerPan.didPan = true;
+  mapLayer.classList.add("is-panning");
   const dx = event.clientX - pointerPan.lastX;
   const dy = event.clientY - pointerPan.lastY;
   pointerPan.lastX = event.clientX;
   pointerPan.lastY = event.clientY;
-  viewportOffset.x -= dx / cameraZoom;
-  viewportOffset.y -= dy / cameraZoom;
-  render();
+  panViewportBy(dx, dy);
 }
 
 function handlePointerUp(event) {
@@ -199,6 +201,8 @@ function handlePointerUp(event) {
   }
 
   mindmap.releasePointerCapture?.(event.pointerId);
+  flushPanFrame();
+  mapLayer.classList.remove("is-panning");
   window.setTimeout(() => {
     pointerPan = null;
   }, 0);
@@ -210,6 +214,8 @@ function handlePointerCancel(event) {
   }
 
   mindmap.releasePointerCapture?.(event.pointerId);
+  mapLayer.classList.remove("is-panning");
+  cancelPanFrame();
   pointerPan = null;
 }
 
@@ -399,13 +405,66 @@ function setActiveIndex(index) {
 function render() {
   const activeNode = preorder[activeIndex] ?? null;
   currentNodeMetrics = measureAllNodes(preorder, activeNode);
-  const model = activeNode ? buildVisibleModel(activeNode) : buildEndModel();
-  const viewport = computeViewport(model, cameraTargetIndex);
+  currentModel = activeNode ? buildVisibleModel(activeNode) : buildEndModel();
+  currentViewport = computeViewport(currentModel, cameraTargetIndex);
 
-  syncLinks(model.links);
-  syncNodes(model.nodes, activeNode);
-  positionMapLayer(viewport, model);
+  syncLinks(currentModel.links);
+  syncNodes(currentModel.nodes, activeNode);
+  positionMapLayer(currentViewport, currentModel);
   updateControls();
+}
+
+function panViewportBy(dx, dy) {
+  const logicalDx = dx / cameraZoom;
+  const logicalDy = dy / cameraZoom;
+  viewportOffset.x -= logicalDx;
+  viewportOffset.y -= logicalDy;
+
+  if (currentViewport) {
+    currentViewport = {
+      ...currentViewport,
+      x: currentViewport.x - logicalDx,
+      y: currentViewport.y - logicalDy,
+    };
+  } else if (currentModel) {
+    currentViewport = computeViewport(currentModel, cameraTargetIndex);
+  }
+
+  schedulePanFrame();
+}
+
+function schedulePanFrame() {
+  if (panFrame !== null) {
+    return;
+  }
+
+  panFrame = window.requestAnimationFrame(() => {
+    panFrame = null;
+    if (currentViewport) {
+      applyMapTransform(currentViewport);
+    }
+  });
+}
+
+function cancelPanFrame() {
+  if (panFrame === null) {
+    return;
+  }
+
+  window.cancelAnimationFrame(panFrame);
+  panFrame = null;
+}
+
+function flushPanFrame() {
+  if (panFrame === null) {
+    return;
+  }
+
+  window.cancelAnimationFrame(panFrame);
+  panFrame = null;
+  if (currentViewport) {
+    applyMapTransform(currentViewport);
+  }
 }
 
 function measureAllNodes(nodes, activeNode) {
@@ -727,6 +786,10 @@ function positionMapLayer(viewport, model) {
   mapLayer.style.width = `${canvas.width}px`;
   mapLayer.style.height = `${canvas.height}px`;
   linkLayer.setAttribute("viewBox", `0 0 ${canvas.width} ${canvas.height}`);
+  applyMapTransform(viewport);
+}
+
+function applyMapTransform(viewport) {
   mapLayer.style.transform = `scale(${cameraZoom}) translate(${-viewport.x}px, ${-viewport.y}px)`;
 }
 
