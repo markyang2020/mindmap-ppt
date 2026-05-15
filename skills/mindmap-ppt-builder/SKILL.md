@@ -15,14 +15,27 @@ Read `references/project-format.md` when you need exact project file conventions
 
 Use this skill to create or update a static page project based on this repository's mindmap-ppt template.
 
-- If the current directory already contains `index.html`, `src/`, and `project/`, treat it as the repo root.
-- If the repo is not present, clone the repository that provided this skill into the current working directory as a folder named `mindmap-ppt`, then enter that folder. If the source repository URL is unknown, ask the user for the template repository URL.
-- If the user requests a named output folder, create or update that folder instead. If it does not exist, clone/copy the template into that folder first.
+- The installed skill includes the required page template under `templates/static-page/`.
+- If the user requests a named output folder, create or update that folder.
+- If the output folder does not exist, copy `templates/static-page/index.html`, `templates/static-page/src/`, and `templates/static-page/project/` into that folder first.
+- If the output folder already exists but does not contain the required template controls, overwrite `index.html` and `src/` from `templates/static-page/` unless the user explicitly says not to.
 - If the intended output path already exists but is not this repo/template shape, stop and ask the user where to place the generated page.
-- Keep the application repository outside the skill folder. Do not copy or clone `index.html`, `src/`, or `project/` into `.agents/skills/mindmap-ppt-builder/`.
-- Normal content-generation output should modify only `project/source.js` and local asset files under `project/`; clone/copy the template first when creating a new page project.
+- Normal content-generation output should modify only the output folder's `project/source.js` and local asset files under `project/`; copy the built-in template first when creating a new page project.
 - Do not delete existing project assets unless the user explicitly asks for cleanup.
-- Do not edit `src/`, `index.html`, or application behavior unless the user explicitly asks for implementation changes.
+- Do not hand-write a replacement player. Use the built-in template. Do not create a simplified custom `index.html`, custom `src/main.js`, or custom controls.
+- Do not edit output `src/`, `index.html`, or application behavior unless the user explicitly asks for implementation changes.
+
+## Required Template Controls
+
+The generated page must preserve these controls from the built-in template:
+
+- `#nodeSlider` for playback progress
+- `#zoomSlider` for page zoom
+- `#activeScaleSlider` for active-node scale
+- `#controlsToggle` for collapsing controls
+- `#nextNodePreview` for the current/next readout
+
+If any of these elements are missing, the output is invalid. Fix it by recopying `index.html` and `src/` from `templates/static-page/`.
 
 ## Workflow
 
@@ -75,13 +88,14 @@ Escape backticks and `${...}` sequences before writing user-derived text inside 
 
 9. Optional syntax check when Node.js is available: `node --check src/main.js` and `node --check project/source.js`.
 10. Do not start a local web server for preview or validation. Do not run commands such as `npm run dev`, `python -m http.server`, `npx serve`, `vite`, or any localhost/127.0.0.1 preview server unless the user explicitly asks for a server.
-11. Default validation should be static: syntax check JavaScript, verify every `@image` path exists, and ensure `index.html` loads `project/source.js` before `src/main.js`.
+11. Default validation should be static: syntax check JavaScript, verify every `@image` path exists, ensure `index.html` loads `project/source.js` before `src/main.js`, and confirm the required template controls exist.
 12. If visual validation is needed and browser inspection is available, open the generated `index.html` via a `file://` URL or tell the user to double-click `index.html`. Do not use localhost or allocate a port.
 13. Final response: give the path to `index.html` and tell the user they can double-click it to preview. Do not mention or suggest local server commands.
 
 ## Presentation Readability Rules
 
 - The first visible experience must be a readable presentation view, not a zoomed-out sitemap.
+- The default template sets page zoom to `180%` and active-node scale to `1.8x`. Preserve these defaults unless the user explicitly asks to change them.
 - Keep the default page focused on the active node. The user can move through the mind map step by step with keyboard, wheel, touch, or the progress slider.
 - Do not generate an extremely wide shallow tree. For long material, group points into 3-5 major branches and use depth to keep each revealed step readable.
 - Prefer concise two-line nodes. Avoid stuffing full paragraphs into node labels.
