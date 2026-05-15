@@ -2,7 +2,9 @@
 
 ## Repository
 
-Target repo: `https://github.com/agegr/mindmap-ppt`
+Target repo: the repository that provides this skill.
+
+The generated project is a directly openable static page. Users preview it by opening `index.html`.
 
 Core files:
 
@@ -17,7 +19,7 @@ Core files:
 Use this shape:
 
 ```js
-export const sourceMarkdown = `
+window.sourceMarkdown = `
 - Markdown Mindmap
   项目汇报思维导图演示
   @image overview.png

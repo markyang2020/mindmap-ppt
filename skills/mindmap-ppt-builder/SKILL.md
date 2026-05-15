@@ -1,25 +1,26 @@
 ---
 name: mindmap-ppt-builder
-description: Create or update content for the agegr/mindmap-ppt static presentation project from a prose draft, article, speech, report, or notes. Use when Codex needs to turn a written document into the project's project/source.js Markdown mind-map data, choose which nodes need illustrations, generate or request GPT Image 2 illustrations matching the project's restrained presentation style, place assets under project/, and validate the result with npm run check.
+description: Generate a directly openable static HTML mind-map PPT page from a prose draft, article, speech, report, or notes. Use when Codex needs to turn a written document into an index.html-based mind-map presentation project, write project/source.js Markdown mind-map data, add optional local illustrations, and tell the user to open index.html for preview.
 ---
 
 # Mindmap PPT Builder
 
 ## Goal
 
-Turn a user-provided source document into a presentation-ready `project/source.js` for this repo. The source document may be pasted text in the conversation or a local text/Markdown file path supplied by the user. The output is a preorder mind-map: concise two-line nodes, optional node images, and local assets that match the current light PPT style.
+Turn a user-provided source document into a directly openable static page project. The source document may be pasted text in the conversation or a local text/Markdown file path supplied by the user. The output is a folder containing `index.html`, `src/`, `project/source.js`, and optional local assets. The generated page is a preorder mind-map PPT: concise two-line nodes, optional node images, and local assets that match the current light PPT style.
 
 Read `references/project-format.md` when you need exact project file conventions or visual constraints.
 
 ## Workspace Requirement
 
-Use this skill inside the `agegr/mindmap-ppt` repository root.
+Use this skill to create or update a static page project based on this repository's mindmap-ppt template.
 
-- If the current directory already contains `package.json`, `index.html`, `src/`, and `project/`, treat it as the repo root.
-- If the repo is not present, clone `https://github.com/agegr/mindmap-ppt` into the current working directory as a folder named `mindmap-ppt`, then enter that folder.
-- If a `mindmap-ppt` path already exists but is not this repo, stop and ask the user where to place the clone.
+- If the current directory already contains `index.html`, `src/`, and `project/`, treat it as the repo root.
+- If the repo is not present, clone the repository that provided this skill into the current working directory as a folder named `mindmap-ppt`, then enter that folder. If the source repository URL is unknown, ask the user for the template repository URL.
+- If the user requests a named output folder, create or update that folder instead. If it does not exist, clone/copy the template into that folder first.
+- If the intended output path already exists but is not this repo/template shape, stop and ask the user where to place the generated page.
 - Keep the application repository outside the skill folder. Do not copy or clone `index.html`, `src/`, or `project/` into `.agents/skills/mindmap-ppt-builder/`.
-- Normal skill output should modify only `project/source.js` and local asset files under `project/`.
+- Normal content-generation output should modify only `project/source.js` and local asset files under `project/`; clone/copy the template first when creating a new page project.
 - Do not delete existing project assets unless the user explicitly asks for cleanup.
 - Do not edit `src/`, `index.html`, or application behavior unless the user explicitly asks for implementation changes.
 
@@ -65,15 +66,16 @@ Use the first line as a short category label and the second line as the main mes
 8. Replace `project/source.js` with:
 
 ```js
-export const sourceMarkdown = `
+window.sourceMarkdown = `
 - ...
 `;
 ```
 
 Escape backticks and `${...}` sequences before writing user-derived text inside the JavaScript template string.
 
-9. Run `npm run check`.
-10. Optional visual validation: run `npm run dev` and inspect `http://127.0.0.1:5173/` when browser inspection is available.
+9. Optional syntax check when Node.js is available: `node --check src/main.js` and `node --check project/source.js`.
+10. Visual validation: open `index.html` directly in the browser when browser inspection is available.
+11. Final response: give the path to `index.html` and tell the user they can double-click it to preview. Do not tell the user to run `npm run dev`.
 
 ## Mindmap Authoring Rules
 
@@ -97,7 +99,7 @@ Escape backticks and `${...}` sequences before writing user-derived text inside 
 Use `@image` as a metadata continuation line after the node's visible two-line label. The `@image` line is not displayed as node text.
 
 ```js
-export const sourceMarkdown = `
+window.sourceMarkdown = `
 - 产品发布
   三分钟讲清楚新功能
   @image overview.png
@@ -152,6 +154,6 @@ When no image-generation tool is available but an illustration is still useful, 
 
 ## Validation Checklist
 
-- `project/source.js` exports `sourceMarkdown`.
+- `project/source.js` assigns `window.sourceMarkdown`.
 - Asset files exist for every `@image`.
-- `npm run check` passes.
+- `node --check src/main.js` and `node --check project/source.js` pass.

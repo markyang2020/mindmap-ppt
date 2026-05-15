@@ -1,5 +1,3 @@
-import { sourceMarkdown } from "../project/source.js";
-
 const mindmap = document.querySelector("#mindmap");
 const mapLayer = document.querySelector("#mapLayer");
 const linkLayer = document.querySelector("#linkLayer");
@@ -21,6 +19,7 @@ const nextNodeTitle = document.querySelector("#nextNodeTitle");
 const imageViewer = createImageViewer();
 
 const SVG_NS = "http://www.w3.org/2000/svg";
+const sourceMarkdown = window.sourceMarkdown ?? "";
 const layout = {
   minNodeWidth: 146,
   minNodeHeight: 57,
