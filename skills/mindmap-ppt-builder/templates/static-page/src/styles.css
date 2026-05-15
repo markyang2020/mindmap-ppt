@@ -340,6 +340,57 @@ h1 {
   text-align: right;
 }
 
+.edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+  padding-right: var(--control-readout-right);
+}
+
+.edit-action,
+.node-editor-button,
+.node-editor-close {
+  appearance: none;
+  border: 1px solid rgba(24, 58, 74, 0.16);
+  color: #183a4a;
+  background: rgba(255, 255, 255, 0.46);
+  cursor: pointer;
+}
+
+.edit-action {
+  min-height: 25px;
+  padding: 0 9px;
+  border-radius: 7px;
+  font-size: 0.68rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.edit-action:hover,
+.edit-action:focus-visible,
+.node-editor-button:hover,
+.node-editor-button:focus-visible,
+.node-editor-close:hover,
+.node-editor-close:focus-visible {
+  border-color: rgba(216, 137, 79, 0.42);
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.edit-action:focus-visible,
+.node-editor-button:focus-visible,
+.node-editor-close:focus-visible,
+.node-editor-field textarea:focus-visible {
+  outline: 3px solid rgba(216, 137, 79, 0.2);
+  outline-offset: 2px;
+}
+
+.edit-action.subtle,
+.node-editor-button.subtle {
+  color: rgba(24, 58, 74, 0.78);
+  background: rgba(255, 255, 255, 0.26);
+}
+
 .presentation-frame {
   position: relative;
   isolation: isolate;
@@ -942,6 +993,122 @@ h1 {
   stroke-width: 4;
 }
 
+.node-editor {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(18, 29, 35, 0.34);
+  opacity: 0;
+  pointer-events: none;
+  backdrop-filter: blur(7px);
+  transition: opacity 180ms ease;
+}
+
+.node-editor.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.node-editor-dialog {
+  display: grid;
+  gap: 14px;
+  width: min(560px, calc(100vw - 36px));
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 12px;
+  background: rgba(255, 253, 248, 0.96);
+  box-shadow: 0 28px 80px rgba(5, 12, 16, 0.22);
+  transform: translateY(8px) scale(0.98);
+  transition: transform 180ms ease;
+}
+
+.node-editor.open .node-editor-dialog {
+  transform: translateY(0) scale(1);
+}
+
+.node-editor-head,
+.node-editor-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.node-editor-kicker {
+  margin: 0 0 4px;
+  color: #6b745d;
+  font-size: 0.68rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.node-editor h2 {
+  margin: 0;
+  color: #172033;
+  font-size: 1.1rem;
+  line-height: 1.22;
+}
+
+.node-editor-close {
+  display: grid;
+  flex: 0 0 28px;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 8px;
+  font-size: 1.08rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.node-editor-field {
+  display: grid;
+  gap: 7px;
+  color: #515d66;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.node-editor-field textarea {
+  width: 100%;
+  min-height: 150px;
+  resize: vertical;
+  padding: 11px 12px;
+  border: 1px solid rgba(24, 58, 74, 0.16);
+  border-radius: 8px;
+  color: #172033;
+  background: rgba(255, 255, 255, 0.72);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.node-editor-status {
+  min-height: 1.2em;
+  margin: -4px 0 0;
+  color: rgba(81, 93, 102, 0.84);
+  font-size: 0.74rem;
+  font-weight: 750;
+}
+
+.node-editor-actions {
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.node-editor-button {
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
 @keyframes link-draw {
   0% {
     opacity: 0;
@@ -1013,6 +1180,11 @@ h1 {
 
   .control-hint {
     text-align: right;
+  }
+
+  .edit-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 
   h1 {

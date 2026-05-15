@@ -16,10 +16,21 @@ const activeScaleValue = document.querySelector("#activeScaleValue");
 const nextNodePreview = document.querySelector("#nextNodePreview");
 const nextNodeSubtitle = document.querySelector("#nextNodeSubtitle");
 const nextNodeTitle = document.querySelector("#nextNodeTitle");
+const editNodeButton = document.querySelector("#editNodeButton");
+const exportSourceButton = document.querySelector("#exportSourceButton");
+const resetEditsButton = document.querySelector("#resetEditsButton");
+const nodeEditor = document.querySelector("#nodeEditor");
+const nodeEditorTitle = document.querySelector("#nodeEditorTitle");
+const nodeEditorText = document.querySelector("#nodeEditorText");
+const nodeEditorStatus = document.querySelector("#nodeEditorStatus");
+const closeEditorButton = document.querySelector("#closeEditorButton");
+const restoreNodeButton = document.querySelector("#restoreNodeButton");
+const saveNodeButton = document.querySelector("#saveNodeButton");
 const imageViewer = createImageViewer();
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const sourceMarkdown = window.sourceMarkdown ?? "";
+const storageKey = `mindmap-ppt-edits:${location.pathname}:${hashString(sourceMarkdown)}`;
 const layout = {
   minNodeWidth: 146,
   minNodeHeight: 57,
@@ -61,10 +72,12 @@ let pointerPan = null;
 let currentViewport = null;
 let currentModel = null;
 let panFrame = null;
+let nodeEditorTargetId = null;
 
 assignTreeMetadata(root);
 preorder = collectPreorder(root);
 idToNode = new Map(preorder.map((node) => [node.id, node]));
+applyStoredNodeEdits();
 nodeSlider.max = String(preorder.length);
 updateDeckHeading(root.label);
 
@@ -88,6 +101,17 @@ activeScaleSlider.addEventListener("input", (event) => {
   activeScale = Number(event.target.value) / 100;
   render();
 });
+editNodeButton.addEventListener("click", () => openNodeEditor(preorder[activeIndex]?.id ?? root.id));
+exportSourceButton.addEventListener("click", exportSourceFile);
+resetEditsButton.addEventListener("click", resetStoredNodeEdits);
+closeEditorButton.addEventListener("click", closeNodeEditor);
+saveNodeButton.addEventListener("click", saveNodeEditor);
+restoreNodeButton.addEventListener("click", restoreNodeEditorText);
+nodeEditor.addEventListener("click", (event) => {
+  if (event.target === nodeEditor) {
+    closeNodeEditor();
+  }
+});
 window.addEventListener("keydown", handleKeydown);
 window.addEventListener("wheel", handleWheel, { passive: false });
 window.addEventListener("resize", () => render());
@@ -103,6 +127,20 @@ mindmap.addEventListener("touchcancel", resetSwipeStart);
 render();
 
 function handleKeydown(event) {
+  if (nodeEditor.classList.contains("open")) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeNodeEditor();
+    }
+
+    if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+      event.preventDefault();
+      saveNodeEditor();
+    }
+
+    return;
+  }
+
   if (imageViewer.isOpen()) {
     if (event.key === "Escape") {
       event.preventDefault();
@@ -220,7 +258,7 @@ function handlePointerCancel(event) {
 }
 
 function isInteractiveControl(target) {
-  return Boolean(target.closest?.(".floating-ui, .image-viewer, button, input, a, textarea, select"));
+  return Boolean(target.closest?.(".floating-ui, .image-viewer, .node-editor, button, input, a, textarea, select"));
 }
 
 function scheduleWheelBufferReset() {
@@ -374,6 +412,7 @@ function findContinuationParent(stack, indent) {
 function assignTreeMetadata(treeRoot) {
   collectPreorder(treeRoot).forEach((node, index) => {
     node.preorderIndex = index;
+    node.originalLabel = node.label;
   });
 }
 
@@ -393,6 +432,158 @@ function collectPreorder(node, list = []) {
   list.push(node);
   node.children.forEach((child) => collectPreorder(child, list));
   return list;
+}
+
+function applyStoredNodeEdits() {
+  const edits = loadNodeEdits();
+  preorder.forEach((node) => {
+    const editedLabel = edits[node.id];
+    node.label = typeof editedLabel === "string" && editedLabel.trim() ? editedLabel : node.originalLabel;
+  });
+}
+
+function loadNodeEdits() {
+  try {
+    return JSON.parse(localStorage.getItem(storageKey) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function saveNodeEdits(edits) {
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(edits));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function openNodeEditor(nodeId) {
+  const node = idToNode.get(nodeId);
+  if (!node) {
+    return;
+  }
+
+  nodeEditorTargetId = node.id;
+  nodeEditorTitle.textContent = formatInlineLabel(node.label);
+  nodeEditorText.value = node.label;
+  nodeEditorStatus.textContent = "修改会保存在当前浏览器；导出 source.js 后可以固化到文件。";
+  nodeEditor.classList.add("open");
+  nodeEditor.setAttribute("aria-hidden", "false");
+  window.setTimeout(() => {
+    nodeEditorText.focus();
+    nodeEditorText.select();
+  }, 0);
+}
+
+function closeNodeEditor() {
+  nodeEditor.classList.remove("open");
+  nodeEditor.setAttribute("aria-hidden", "true");
+  nodeEditorTargetId = null;
+}
+
+function saveNodeEditor() {
+  const node = idToNode.get(nodeEditorTargetId);
+  if (!node) {
+    return;
+  }
+
+  const nextLabel = normalizeNodeLabel(nodeEditorText.value);
+  if (!nextLabel) {
+    nodeEditorStatus.textContent = "节点内容不能为空。";
+    return;
+  }
+
+  const edits = loadNodeEdits();
+  if (nextLabel === node.originalLabel) {
+    delete edits[node.id];
+  } else {
+    edits[node.id] = nextLabel;
+  }
+  const didPersist = saveNodeEdits(edits);
+
+  node.label = nextLabel;
+  if (node.id === root.id) {
+    updateDeckHeading(root.label);
+  }
+  render();
+  if (didPersist) {
+    closeNodeEditor();
+  } else {
+    nodeEditorStatus.textContent = "已更新当前页面，但浏览器未允许本地保存；请导出 source.js 固化。";
+  }
+}
+
+function restoreNodeEditorText() {
+  const node = idToNode.get(nodeEditorTargetId);
+  if (!node) {
+    return;
+  }
+
+  nodeEditorText.value = node.originalLabel;
+  nodeEditorStatus.textContent = "已填回原始文本，点击保存后生效。";
+}
+
+function resetStoredNodeEdits() {
+  if (!confirm("确认清空当前页面保存的所有节点编辑吗？")) {
+    return;
+  }
+
+  try {
+    localStorage.removeItem(storageKey);
+  } catch {
+    // Ignore storage failures; the in-memory tree is still reset below.
+  }
+  preorder.forEach((node) => {
+    node.label = node.originalLabel;
+  });
+  updateDeckHeading(root.label);
+  render();
+}
+
+function exportSourceFile() {
+  const source = `window.sourceMarkdown = ${JSON.stringify(serializeTreeToMarkdown(root), null, 2)};\n`;
+  const blob = new Blob([source], { type: "text/javascript;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "source.js";
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function serializeTreeToMarkdown(treeRoot) {
+  const lines = [];
+  appendNodeMarkdown(treeRoot, 0, lines);
+  return `\n${lines.join("\n")}\n`;
+}
+
+function appendNodeMarkdown(node, depth, lines) {
+  const indent = "  ".repeat(depth);
+  const [firstLine, ...continuationLines] = node.label.split("\n").map((line) => line.trim()).filter(Boolean);
+  lines.push(`${indent}- ${firstLine || "未命名节点"}`);
+  continuationLines.forEach((line) => {
+    lines.push(`${indent}  ${line}`);
+  });
+  if (node.image) {
+    lines.push(`${indent}  @image ${formatImageForSource(node.image)}`);
+  }
+  node.children.forEach((child) => appendNodeMarkdown(child, depth + 1, lines));
+}
+
+function formatImageForSource(imagePath) {
+  return imagePath.startsWith("./project/") ? imagePath.slice("./project/".length) : imagePath;
+}
+
+function normalizeNodeLabel(value) {
+  return value
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join("\n");
 }
 
 function setActiveIndex(index) {
@@ -865,10 +1056,19 @@ function createNodeElement(node) {
   group.setAttribute("role", "button");
   group.setAttribute("tabindex", "0");
   group.addEventListener("click", () => focusCameraOnNode(node.id));
+  group.addEventListener("dblclick", (event) => {
+    event.preventDefault();
+    openNodeEditor(node.id);
+  });
   group.addEventListener("keydown", (event) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       focusCameraOnNode(node.id);
+    }
+
+    if (event.key.toLowerCase() === "e") {
+      event.preventDefault();
+      openNodeEditor(node.id);
     }
   });
 
@@ -1114,4 +1314,13 @@ function splitLabel(label) {
     subtitle,
     title: hasSubtitle ? titleLines.join("\n") : subtitle,
   };
+}
+
+function hashString(value) {
+  let hash = 5381;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 33) ^ value.charCodeAt(index);
+  }
+
+  return (hash >>> 0).toString(36);
 }

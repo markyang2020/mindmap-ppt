@@ -83,12 +83,38 @@
                   </div>
                 </div>
               </div>
+              <div class="edit-actions" aria-label="内容编辑">
+                <button class="edit-action" id="editNodeButton" type="button">编辑当前节点</button>
+                <button class="edit-action" id="exportSourceButton" type="button">导出 source.js</button>
+                <button class="edit-action subtle" id="resetEditsButton" type="button">重置编辑</button>
+              </div>
               <p class="control-hint">翻页：↑ ↓、Page Up / Page Down、滚轮或移动端上划/下划</p>
             </div>
           </div>
         </section>
       </section>
     </main>
+
+    <div class="node-editor" id="nodeEditor" aria-hidden="true">
+      <div class="node-editor-dialog" role="dialog" aria-modal="true" aria-labelledby="nodeEditorTitle">
+        <div class="node-editor-head">
+          <div>
+            <p class="node-editor-kicker">编辑节点</p>
+            <h2 id="nodeEditorTitle">节点内容</h2>
+          </div>
+          <button class="node-editor-close" id="closeEditorButton" type="button" aria-label="关闭编辑器">×</button>
+        </div>
+        <label class="node-editor-field" for="nodeEditorText">
+          <span>第一行作为小标题，后续行作为正文</span>
+          <textarea id="nodeEditorText" rows="6"></textarea>
+        </label>
+        <p class="node-editor-status" id="nodeEditorStatus"></p>
+        <div class="node-editor-actions">
+          <button class="node-editor-button subtle" id="restoreNodeButton" type="button">恢复原文</button>
+          <button class="node-editor-button" id="saveNodeButton" type="button">保存</button>
+        </div>
+      </div>
+    </div>
 
     <script src="./project/source.js"></script>
     <script src="./src/main.js"></script>
