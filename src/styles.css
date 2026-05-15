@@ -528,6 +528,11 @@ h1 {
   min-height: 100vh;
   overscroll-behavior: contain;
   touch-action: none;
+  cursor: grab;
+}
+
+#mindmap:active {
+  cursor: grabbing;
 }
 
 .map-layer,

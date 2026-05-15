@@ -17,7 +17,7 @@ Preview rule: open `index.html` directly. Do not require or start a local server
 
 Readability rule: the default view should focus the active node at presentation size. The page should never open as a tiny full-map overview.
 
-Template rule: copy the built-in template from `templates/static-page/`. Do not hand-write a simplified player. The delivered `index.html` must include `nodeSlider`, `zoomSlider`, `activeScaleSlider`, `controlsToggle`, and `nextNodePreview`.
+Template rule: copy the built-in template from `templates/static-page/`. Do not hand-write a simplified player. The delivered `index.html` must include `nodeSlider`, `zoomSlider`, `activeScaleSlider`, `controlsToggle`, and `nextNodePreview`. The delivered `src/main.js` must preserve mouse left-button drag panning for the canvas.
 
 ## `project/source.js`
 

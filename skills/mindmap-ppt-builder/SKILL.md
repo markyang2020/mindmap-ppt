@@ -34,6 +34,7 @@ The generated page must preserve these controls from the built-in template:
 - `#activeScaleSlider` for active-node scale
 - `#controlsToggle` for collapsing controls
 - `#nextNodePreview` for the current/next readout
+- mouse left-button drag panning on the mind-map canvas
 
 If any of these elements are missing, the output is invalid. Fix it by recopying `index.html` and `src/` from `templates/static-page/`.
 
@@ -97,6 +98,7 @@ Escape backticks and `${...}` sequences before writing user-derived text inside 
 - The first visible experience must be a readable presentation view, not a zoomed-out sitemap.
 - The default template sets page zoom to `180%` and active-node scale to `1.8x`. Preserve these defaults unless the user explicitly asks to change them.
 - Keep the default page focused on the active node. The user can move through the mind map step by step with keyboard, wheel, touch, or the progress slider.
+- Preserve mouse left-button drag panning so users can inspect crowded or off-screen branches without changing playback progress.
 - Do not generate an extremely wide shallow tree. For long material, group points into 3-5 major branches and use depth to keep each revealed step readable.
 - Prefer concise two-line nodes. Avoid stuffing full paragraphs into node labels.
 - If a generated page looks like a tiny cluster in the middle of a huge canvas, revise the tree or layout before delivering it.

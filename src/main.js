@@ -39,6 +39,9 @@ const swipeNavigation = {
   minDistance: 56,
   dominanceRatio: 1.25,
 };
+const dragPan = {
+  threshold: 4,
+};
 
 let activeIndex = 0;
 let root = parseMarkdownTree(sourceMarkdown);
@@ -53,6 +56,8 @@ let activeScale = Number(activeScaleSlider.value) / 100;
 let wheelDeltaBuffer = 0;
 let wheelNavigationTimer = null;
 let swipeStart = null;
+let viewportOffset = { x: 0, y: 0 };
+let pointerPan = null;
 
 assignTreeMetadata(root);
 preorder = collectPreorder(root);
@@ -83,6 +88,10 @@ activeScaleSlider.addEventListener("input", (event) => {
 window.addEventListener("keydown", handleKeydown);
 window.addEventListener("wheel", handleWheel, { passive: false });
 window.addEventListener("resize", () => render());
+mindmap.addEventListener("pointerdown", handlePointerDown);
+window.addEventListener("pointermove", handlePointerMove);
+window.addEventListener("pointerup", handlePointerUp);
+window.addEventListener("pointercancel", handlePointerCancel);
 mindmap.addEventListener("touchstart", handleTouchStart, { passive: true });
 mindmap.addEventListener("touchmove", handleTouchMove, { passive: false });
 mindmap.addEventListener("touchend", handleTouchEnd, { passive: false });
@@ -138,6 +147,74 @@ function handleWheel(event) {
   setActiveIndex(activeIndex + step);
   wheelDeltaBuffer -= step * wheelNavigation.threshold;
   scheduleWheelBufferReset();
+}
+
+function handlePointerDown(event) {
+  if (imageViewer.isOpen() || event.button !== 0 || isInteractiveControl(event.target)) {
+    return;
+  }
+
+  pointerPan = {
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY,
+    lastX: event.clientX,
+    lastY: event.clientY,
+    didPan: false,
+  };
+  mindmap.setPointerCapture?.(event.pointerId);
+}
+
+function handlePointerMove(event) {
+  if (!pointerPan || event.pointerId !== pointerPan.pointerId) {
+    return;
+  }
+
+  const totalDx = event.clientX - pointerPan.startX;
+  const totalDy = event.clientY - pointerPan.startY;
+  const shouldPan = pointerPan.didPan || Math.hypot(totalDx, totalDy) >= dragPan.threshold;
+
+  if (!shouldPan) {
+    return;
+  }
+
+  event.preventDefault();
+  pointerPan.didPan = true;
+  const dx = event.clientX - pointerPan.lastX;
+  const dy = event.clientY - pointerPan.lastY;
+  pointerPan.lastX = event.clientX;
+  pointerPan.lastY = event.clientY;
+  viewportOffset.x -= dx / cameraZoom;
+  viewportOffset.y -= dy / cameraZoom;
+  render();
+}
+
+function handlePointerUp(event) {
+  if (!pointerPan || event.pointerId !== pointerPan.pointerId) {
+    return;
+  }
+
+  if (pointerPan.didPan) {
+    event.preventDefault();
+  }
+
+  mindmap.releasePointerCapture?.(event.pointerId);
+  window.setTimeout(() => {
+    pointerPan = null;
+  }, 0);
+}
+
+function handlePointerCancel(event) {
+  if (!pointerPan || event.pointerId !== pointerPan.pointerId) {
+    return;
+  }
+
+  mindmap.releasePointerCapture?.(event.pointerId);
+  pointerPan = null;
+}
+
+function isInteractiveControl(target) {
+  return Boolean(target.closest?.(".floating-ui, .image-viewer, button, input, a, textarea, select"));
 }
 
 function scheduleWheelBufferReset() {
@@ -315,6 +392,7 @@ function collectPreorder(node, list = []) {
 function setActiveIndex(index) {
   activeIndex = Math.max(0, Math.min(index, preorder.length));
   cameraTargetIndex = null;
+  viewportOffset = { x: 0, y: 0 };
   render();
 }
 
@@ -582,8 +660,8 @@ function computeViewport(model, targetIndex = null) {
   }
 
   return {
-    x: viewportX,
-    y: viewportY,
+    x: viewportX + viewportOffset.x,
+    y: viewportY + viewportOffset.y,
     width: logicalViewport.width,
     height: logicalViewport.height,
   };
@@ -603,8 +681,8 @@ function computeEndViewport(model, logicalViewport, targetIndex = null) {
   }
 
   return {
-    x: viewportX,
-    y: viewportY,
+    x: viewportX + viewportOffset.x,
+    y: viewportY + viewportOffset.y,
     width: logicalViewport.width,
     height: logicalViewport.height,
   };
@@ -742,12 +820,17 @@ function createNodeElement(node) {
 }
 
 function focusCameraOnNode(nodeId) {
+  if (pointerPan?.didPan) {
+    return;
+  }
+
   const node = idToNode.get(nodeId);
   if (!node) {
     return;
   }
 
   cameraTargetIndex = node.preorderIndex === activeIndex ? null : node.preorderIndex;
+  viewportOffset = { x: 0, y: 0 };
   render();
 }
 
