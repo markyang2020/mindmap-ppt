@@ -15,6 +15,8 @@ Core files:
 
 Preview rule: open `index.html` directly. Do not require or start a local server.
 
+Readability rule: the default view should focus the active node at presentation size. The page should never open as a tiny full-map overview.
+
 ## `project/source.js`
 
 Use this shape:

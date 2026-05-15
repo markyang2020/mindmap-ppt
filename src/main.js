@@ -28,7 +28,7 @@ const layout = {
   stagePaddingX: 114,
   stagePaddingY: 72,
   centerBaseline: 520,
-  cameraTargetCenterBand: 0.4,
+  cameraTargetCenterBand: 0.22,
 };
 const wheelNavigation = {
   threshold: 72,
@@ -570,15 +570,11 @@ function computeViewport(model, targetIndex = null) {
     return computeEndViewport(model, logicalViewport, targetIndex);
   }
 
-  const pathNodes = model.nodes.filter((node) => node.isPath);
-  const pathMinX = Math.min(...pathNodes.map((node) => node.x - node.width / 2));
-  const pathMaxX = Math.max(...pathNodes.map((node) => node.x + node.width / 2));
-  const pathCenterX = (pathMinX + pathMaxX) / 2;
   const activeNode = model.nodes.find((node) => node.isActive);
   const targetNode =
     targetIndex === null ? activeNode : model.nodes.find((node) => node.preorderIndex === targetIndex) ?? activeNode;
-  let viewportX = pathCenterX - logicalViewport.width / 2;
-  let viewportY = model.baseline - logicalViewport.height / 2;
+  let viewportX = (targetNode?.x ?? layout.stagePaddingX) - logicalViewport.width / 2;
+  let viewportY = (targetNode?.y ?? model.baseline) - logicalViewport.height / 2;
 
   if (targetNode) {
     viewportX = keepNodeInCenterBand(viewportX, logicalViewport.width, targetNode.x, layout.cameraTargetCenterBand);

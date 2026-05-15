@@ -79,6 +79,14 @@ Escape backticks and `${...}` sequences before writing user-derived text inside 
 12. If visual validation is needed and browser inspection is available, open the generated `index.html` via a `file://` URL or tell the user to double-click `index.html`. Do not use localhost or allocate a port.
 13. Final response: give the path to `index.html` and tell the user they can double-click it to preview. Do not mention or suggest local server commands.
 
+## Presentation Readability Rules
+
+- The first visible experience must be a readable presentation view, not a zoomed-out sitemap.
+- Keep the default page focused on the active node. The user can move through the mind map step by step with keyboard, wheel, touch, or the progress slider.
+- Do not generate an extremely wide shallow tree. For long material, group points into 3-5 major branches and use depth to keep each revealed step readable.
+- Prefer concise two-line nodes. Avoid stuffing full paragraphs into node labels.
+- If a generated page looks like a tiny cluster in the middle of a huge canvas, revise the tree or layout before delivering it.
+
 ## Mindmap Authoring Rules
 
 - Do not force every deck into a strict `root -> level 1 -> level 2 -> level 3` taxonomy. That shape is only a useful default, not a rule.
