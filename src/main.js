@@ -73,6 +73,7 @@ let currentViewport = null;
 let currentModel = null;
 let panFrame = null;
 let nodeEditorTargetId = null;
+let nodeClickTimer = null;
 
 assignTreeMetadata(root);
 preorder = collectPreorder(root);
@@ -465,6 +466,7 @@ function openNodeEditor(nodeId) {
     return;
   }
 
+  cancelNodeClickTimer();
   nodeEditorTargetId = node.id;
   nodeEditorTitle.textContent = formatInlineLabel(node.label);
   nodeEditorText.value = node.label;
@@ -1055,9 +1057,11 @@ function createNodeElement(node) {
   group.classList.add("mind-node", "entering");
   group.setAttribute("role", "button");
   group.setAttribute("tabindex", "0");
-  group.addEventListener("click", () => focusCameraOnNode(node.id));
+  group.addEventListener("click", (event) => handleNodeClick(event, node.id));
   group.addEventListener("dblclick", (event) => {
     event.preventDefault();
+    event.stopPropagation();
+    cancelNodeClickTimer();
     openNodeEditor(node.id);
   });
   group.addEventListener("keydown", (event) => {
@@ -1080,6 +1084,27 @@ function createNodeElement(node) {
   });
 
   return { group, content, removalTimer: null };
+}
+
+function handleNodeClick(event, nodeId) {
+  if (pointerPan?.didPan || event.detail > 1) {
+    return;
+  }
+
+  cancelNodeClickTimer();
+  nodeClickTimer = window.setTimeout(() => {
+    nodeClickTimer = null;
+    focusCameraOnNode(nodeId);
+  }, 220);
+}
+
+function cancelNodeClickTimer() {
+  if (nodeClickTimer === null) {
+    return;
+  }
+
+  window.clearTimeout(nodeClickTimer);
+  nodeClickTimer = null;
 }
 
 function focusCameraOnNode(nodeId) {
