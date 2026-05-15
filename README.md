@@ -74,19 +74,6 @@ project/图片素材
 index.html
 ```
 
-## AGENTS.md 是什么
-
-`AGENTS.md` 是给 Agent 看的项目规则文件，不是给普通用户操作的文档。
-
-它告诉 Agent：
-
-- 导图内容应该写到 `project/source.js`
-- 图片素材应该放到 `project/`
-- 节点文本、图片引用、布局和交互要遵守什么规则
-- 这个项目是纯 HTML + JS + CSS，不需要启动开发服务
-
-普通用户只需要看 README 和打开 `index.html`。
-
 ## 部署
 
 把生成目录整体上传到 Nginx、对象存储、GitHub Pages、Netlify 或任意静态服务器即可。

@@ -74,8 +74,10 @@ window.sourceMarkdown = `
 Escape backticks and `${...}` sequences before writing user-derived text inside the JavaScript template string.
 
 9. Optional syntax check when Node.js is available: `node --check src/main.js` and `node --check project/source.js`.
-10. Visual validation: open `index.html` directly in the browser when browser inspection is available.
-11. Final response: give the path to `index.html` and tell the user they can double-click it to preview. Do not tell the user to run `npm run dev`.
+10. Do not start a local web server for preview or validation. Do not run commands such as `npm run dev`, `python -m http.server`, `npx serve`, `vite`, or any localhost/127.0.0.1 preview server unless the user explicitly asks for a server.
+11. Default validation should be static: syntax check JavaScript, verify every `@image` path exists, and ensure `index.html` loads `project/source.js` before `src/main.js`.
+12. If visual validation is needed and browser inspection is available, open the generated `index.html` via a `file://` URL or tell the user to double-click `index.html`. Do not use localhost or allocate a port.
+13. Final response: give the path to `index.html` and tell the user they can double-click it to preview. Do not mention or suggest local server commands.
 
 ## Mindmap Authoring Rules
 

@@ -12,7 +12,8 @@ Core files:
 - `project/`: project content and local illustration assets.
 - `src/main.js`: parser, navigation, layout, camera, node/image rendering.
 - `src/styles.css`: visual style and animations.
-- `AGENTS.md`: source-of-truth project rules.
+
+Preview rule: open `index.html` directly. Do not require or start a local server.
 
 ## `project/source.js`
 
